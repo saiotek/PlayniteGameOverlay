@@ -238,12 +238,15 @@ namespace PlayniteGameOverlay
         public ICommand ShowPlayniteCommand { get; }
         public ICommand CloseGameCommand { get; }
         public ICommand ShortcutButtonCommand { get; }
+        private ICommand _hibernateCommand;
+        public ICommand HibernateCommand => _hibernateCommand ?? (_hibernateCommand = new RelayCommand(_ => RaiseHibernateRequested()));
 
         // Event for showing Playnite
         public event Action<bool> ShowPlayniteRequested;
         public event Action HideOverlayRequested;
         public event Action CloseGameRequested;
         public event Action<ShortcutButtonViewModel> ExecuteShortcutRequested;
+        public event Action HibernateRequested;
 
         // Constructor with design-time data support
         public OverlayWindowViewModel(bool designMode = false)
@@ -474,6 +477,34 @@ namespace PlayniteGameOverlay
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        private void RaiseHibernateRequested()
+        {
+            HibernateRequested?.Invoke();
+        }
+
+        // Minimaler RelayCommand-Helper (falls noch kein Command-Helper vorhanden ist)
+        private class RelayCommand : ICommand
+        {
+            private readonly Action<object> _execute;
+            private readonly Func<object, bool> _canExecute;
+
+            public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
+            {
+                _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+                _canExecute = canExecute;
+            }
+
+            public bool CanExecute(object parameter) => _canExecute?.Invoke(parameter) ?? true;
+
+            public void Execute(object parameter) => _execute(parameter);
+
+            public event EventHandler CanExecuteChanged
+            {
+                add { CommandManager.RequerySuggested += value; }
+                remove { CommandManager.RequerySuggested -= value; }
+            }
+        }
     }
 
     public class ShortcutButtonViewModel
@@ -489,28 +520,5 @@ namespace PlayniteGameOverlay
         Discord,
         Path,
         KbdShortcut
-    }
-
-    // Command implementation
-    public class RelayCommand : ICommand
-    {
-        private readonly Action<object> _execute;
-        private readonly Func<object, bool> _canExecute;
-
-        public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
-        {
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            _canExecute = canExecute;
-        }
-
-        public bool CanExecute(object parameter) => _canExecute == null || _canExecute(parameter);
-
-        public void Execute(object parameter) => _execute(parameter);
-
-        public event EventHandler CanExecuteChanged
-        {
-            add => CommandManager.RequerySuggested += value;
-            remove => CommandManager.RequerySuggested -= value;
-        }
     }
 }
