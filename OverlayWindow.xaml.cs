@@ -11,7 +11,7 @@ namespace PlayniteGameOverlay
 {
     public partial class OverlayWindow : Window
     {
-        // P/Invoke für Hibernate (powrprof.dll)
+        // P/Invoke for hibernate (powrprof.dll)
         [DllImport("powrprof.dll", SetLastError = true)]
         private static extern bool SetSuspendState(bool hibernate, bool forceCritical, bool disableWakeEvent);
 
@@ -48,7 +48,7 @@ namespace PlayniteGameOverlay
             ViewModel = new OverlayWindowViewModel();
             this.DataContext = ViewModel;
 
-            // MVVM: subscribe auf HibernateRequested (Side-effect bleibt in View)
+            // MVVM: subscribe to HibernateRequested (side-effect remains in the View)
             ViewModel.HibernateRequested += OnHibernateRequested;
 
             // Connect ViewModel events to handlers
@@ -431,26 +431,26 @@ namespace PlayniteGameOverlay
         // Event to request showing the Overlay (to be handled by the plugin)
         public event Action OnShowOverlayRequested;
 
-        // Neuer Handler — führt das Hibernate aus, wenn ViewModel das anfordert.
+        // New handler — performs hibernate when requested by the ViewModel.
         private void OnHibernateRequested()
         {
-            // Dispatcher, damit UI-Thread genutzt wird
+            // Dispatcher to ensure UI thread is used
             Dispatcher.Invoke(() =>
             {
                 try
                 {
-                    // Verstecken des Overlays und Timer anhalten
+                    // Hide the overlay and stop timers
                     this.Hide();
                     PauseTimers();
 
                     _logger.Log("Attempting to hibernate system...", "HIBERNATE");
 
-                    // Versuch über powrprof.dll
+                    // Attempt via powrprof.dll
                     bool success = SetSuspendState(true, false, false);
 
                     if (!success)
                     {
-                        // Fallback: shutdown /h (erfordert ggf. Rechte)
+                        // Fallback: shutdown /h (may require privileges)
                         _logger.Log("SetSuspendState returned false, falling back to shutdown /h", "HIBERNATE");
                         ProcessStartInfo psi = new ProcessStartInfo("shutdown", "/h")
                         {

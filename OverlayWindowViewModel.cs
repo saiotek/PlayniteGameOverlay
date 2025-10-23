@@ -483,7 +483,7 @@ namespace PlayniteGameOverlay
             HibernateRequested?.Invoke();
         }
 
-        // Minimaler RelayCommand-Helper (falls noch kein Command-Helper vorhanden ist)
+        // Minimal relay command helper (in case no command helper exists)
         private class RelayCommand : ICommand
         {
             private readonly Action<object> _execute;
